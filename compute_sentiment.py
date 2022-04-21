@@ -1,47 +1,54 @@
 import re
 import nltk
-import nltk.sentiment.vader as sev
 import numpy as np
 import pandas as pd
+import nltk.sentiment.vader as sev
 
+
+from params import listOfSubreddits
 
 # pre-trained sentiment analysis
 # nltk.download('vader_lexicon', download_dir='./')
 
-listOfSubreddits = ['games', 'news', 'science', 'space', 'politics', 'gonewild']
 
-sia_cols = ['comment_sentiment', 'title_sentiment', 'comment_score', 'post_score',
-            'post_id', 'subreddit']
+def main():
+    sia_cols = ['comment_sentiment', 'title_sentiment', 'comment_score', 'post_score',
+                'post_id', 'subreddit', 'post_time', 'comment_time']
 
-sia = sev.SentimentIntensityAnalyzer()
+    sia = sev.SentimentIntensityAnalyzer()
 
-df_list = []
+    df_list = []
 
-for subredditName in listOfSubreddits:
+    for subredditName in listOfSubreddits:
 
-    pf = pd.read_csv(f'./data/{subredditName}_posts.csv')
+        pf = pd.read_csv(f'./data/{subredditName}_posts.csv')
 
-    df = pd.read_csv(f'./data/{subredditName}_comments.csv')
+        cf = pd.read_csv(f'./data/{subredditName}_comments.csv')
 
-    gb = df.groupby('post_id')
+        gb = cf.groupby('post_id')
 
-    for key, grp in gb:
-        tdf = pd.DataFrame(columns=sia_cols)
+        for key, grp in gb:
+            tdf = pd.DataFrame(columns=sia_cols)
 
-        for item in grp.iterrows():
-            post = pf[pf.id == key]
+            for item in grp.iterrows():
+                post = pf[pf.id == key]
 
-            idx = item[0]
-            comment = item[1]
-            title_sentiment = sia.polarity_scores(post.title.values[0])['compound']
-            sentiment_score = sia.polarity_scores(comment.body)['compound']
+                idx = item[0]
+                comment = item[1]
+                title_sentiment = sia.polarity_scores(post.title.values[0])['compound']
+                sentiment_score = sia.polarity_scores(comment.body)['compound']
 
-            tdf.loc[idx, sia_cols] = [sentiment_score, title_sentiment, comment.score,
-                                      post.score.values[0], key, subredditName]
-        df_list.append(tdf)
+                tdf.loc[idx, sia_cols] = [sentiment_score, title_sentiment, comment.score,
+                                          post.score.values[0], key, subredditName,
+                                          post.created.values[0], comment.created]
+            df_list.append(tdf)
 
-    print(f'Finished processing data from r/{subredditName}.')
+        print(f'Finished processing data from r/{subredditName}.')
 
-cdf = pd.concat(df_list, ignore_index=True)
+    cdf = pd.concat(df_list, ignore_index=True)
 
-cdf.to_csv('sentiment_data.csv', index=False)
+    cdf.to_csv('sentiment_data.csv', index=False)
+
+
+if __name__ == "__main__":
+    main()

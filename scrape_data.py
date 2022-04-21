@@ -1,17 +1,12 @@
-import datetime
+import praw
+import pandas as pd
 import subprocess as sp
 
-import pandas as pd
-import praw
-import vutils.general as vg
-
-import sqlite3
-
 from api_keys import client_id, client_secret, user_agent, username
+from params import num_posts, listOfSubreddits
 
 
-@vg.timing
-def get_posts(subreddit, num_posts: int, output: str):
+def getPosts(subreddit, num_posts: int, output: str):
 
     post_columns = ['title', 'score', 'upvote_ratio', 'id', 'subreddit', 'url', 'num_comments',
                     'is_reddit_media_domain', 'total_awards_received', 'created']
@@ -23,20 +18,18 @@ def get_posts(subreddit, num_posts: int, output: str):
         if post.stickied:
             continue
 
-        posts_df.loc[len(posts_df), post_columns] = [post.title, post.score, post.upvote_ratio,
-                                                     post.id, post.subreddit, post.url,
-                                                     post.num_comments,
-                                                     post.is_reddit_media_domain,
-                                                     post.total_awards_received,
-                                                     post.created]
+        post_data = [post.title, post.score, post.upvote_ratio, post.id, post.subreddit,
+                     post.url, post.num_comments, post.is_reddit_media_domain,
+                     post.total_awards_received, post.created]
+
+        posts_df.loc[len(posts_df), post_columns] = post_data
 
     posts_df.to_csv(output, index=False)
 
     return posts_df
 
 
-@vg.timing
-def get_comments(reddit, id_list, output):
+def getComments(reddit, id_list, output):
     comment_columns = ['body', 'score', 'post_id', 'total_awards_received', 'created']
 
     flist = []
@@ -66,8 +59,6 @@ def get_comments(reddit, id_list, output):
 
         flist.append(comments_df)
 
-        vg.print_progress(odx, len(id_list), "scraping comments...")
-
     pd.concat(flist, ignore_index=True).to_csv(output, index=False)
 
 
@@ -76,18 +67,11 @@ def main():
     reddit = praw.Reddit(client_id=client_id, client_secret=client_secret,
                          user_agent=user_agent, username=username)
 
-    # datetime_str = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S')
-
-    # dir_name = f'./data_{datetime_str}'
     dir_name = './data'
 
     full_cmd = f'mkdir -p {dir_name}'
 
     sp.run(full_cmd.split())
-
-    listOfSubreddits = ['games', 'news', 'science', 'space', 'politics', 'gonewild']
-
-    num_posts = 10
 
     for subredditName in listOfSubreddits:
 
@@ -96,9 +80,9 @@ def main():
         posts_outfile = f'{dir_name}/{subredditName}_posts.csv'
         comments_outfile = f'{dir_name}/{subredditName}_comments.csv'
 
-        df = get_posts(subreddit=subreddit, num_posts=num_posts, output=posts_outfile)
+        df = getPosts(subreddit=subreddit, num_posts=num_posts, output=posts_outfile)
 
-        get_comments(reddit=reddit, id_list=df.id.values, output=comments_outfile)
+        getComments(reddit=reddit, id_list=df.id.values, output=comments_outfile)
 
 
 if __name__ == "__main__":
