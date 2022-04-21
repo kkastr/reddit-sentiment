@@ -34,7 +34,7 @@ def getComments(reddit, id_list, output):
 
     flist = []
 
-    for odx, post_id in enumerate(id_list):
+    for post_id in id_list:
 
         submission = reddit.submission(id=post_id)
         # submission.comments.replace_more(limit=None)
@@ -52,10 +52,10 @@ def getComments(reddit, id_list, output):
             if comment.stickied:
                 continue
 
-            comments_df.loc[len(comments_df), comment_columns] = [comment.body, comment.score,
-                                                                  post_id,
-                                                                  comment.total_awards_received,
-                                                                  comment.created]
+            comment_data = [comment.body, comment.score, post_id, comment.total_awards_received,
+                            comment.created]
+
+            comments_df.loc[len(comments_df), comment_columns] = comment_data
 
         flist.append(comments_df)
 

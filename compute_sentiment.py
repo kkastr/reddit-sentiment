@@ -38,9 +38,11 @@ def main():
                 title_sentiment = sia.polarity_scores(post.title.values[0])['compound']
                 sentiment_score = sia.polarity_scores(comment.body)['compound']
 
-                tdf.loc[idx, sia_cols] = [sentiment_score, title_sentiment, comment.score,
-                                          post.score.values[0], key, subredditName,
-                                          post.created.values[0], comment.created]
+                output_data = [sentiment_score, title_sentiment, comment.score,
+                               post.score.values[0], key, subredditName,
+                               post.created.values[0], comment.created]
+
+                tdf.loc[idx, sia_cols] = output_data
             df_list.append(tdf)
 
         print(f'Finished processing data from r/{subredditName}.')
