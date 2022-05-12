@@ -13,7 +13,7 @@ from params import listOfSubreddits
 
 def main():
     sia_cols = ['comment_sentiment', 'title_sentiment', 'comment_score', 'post_score',
-                'post_id', 'subreddit', 'post_time', 'comment_time']
+                'post_upvote_ratio', 'post_id', 'subreddit', 'post_time', 'comment_time']
 
     sia = sev.SentimentIntensityAnalyzer()
 
@@ -39,7 +39,8 @@ def main():
                 sentiment_score = sia.polarity_scores(comment.body)['compound']
 
                 output_data = [sentiment_score, title_sentiment, comment.score,
-                               post.score.values[0], key, subredditName,
+                               post.score.values[0], post.upvote_ratio.values[0],
+                               key, subredditName,
                                post.created.values[0], comment.created]
 
                 tdf.loc[idx, sia_cols] = output_data

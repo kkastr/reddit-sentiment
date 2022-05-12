@@ -1,8 +1,9 @@
 data/
 archive/
 sentiment/
+emojis/
+thumb_plot.py
 api_keys.py
-plot.py
 *.csv
 # Byte-compiled / optimized / DLL files
 __pycache__/
