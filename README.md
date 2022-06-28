@@ -23,7 +23,7 @@ python3 scrape_data.py
 python3 compute_sentiment.py
 ```
 
-Once the computation has finished, the script will generate a file called `sentiment.csv` which will contain all the sentiment data in addition to some other information, such as the time of posting, and the score.
+Once the computation has finished, the script will generate a file called `sentiment_data.csv` which will contain all the sentiment data in addition to some other information, such as the time of posting, and the score.
 
 ## Sentiment analysis on reddit comments
 
