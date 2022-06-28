@@ -33,5 +33,4 @@ In this work, we look at the comments from various subreddits and compute the se
 
 ![sent_dist](./plots/sentiment_percent_per_sub.png)
 
-
 ![av_sent_time](./plots/comment_density_v_time_after_submission.png)
