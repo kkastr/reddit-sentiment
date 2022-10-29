@@ -8,13 +8,13 @@ import os
 
 fontsize = 16
 
-os.system("mkdir -p ./plots/")
+os.system("mkdir -p ./huggingface_plots/")
 
 plt.rc("font", family="serif", size=fontsize)
 plt.rc("lines", linewidth=4, aa=True)
 plt.rc("figure", figsize=(10, 6))
 
-df = pd.read_csv("sentiment_data.csv")
+df = pd.read_csv("huggingface_sentiment_data.csv")
 
 colors = iter(list(mcolors.TABLEAU_COLORS))
 
@@ -43,7 +43,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1.04, 1), frameon=False)
 ax.set_ylabel("Comment Density")
 ax.set_xlabel("Sentiment Value")
 plt.tight_layout()
-plt.savefig("./plots/comment_density_vs_sent_value.png", dpi=600)
+plt.savefig("./huggingface_plots/comment_density_vs_sent_value.png", dpi=600)
 plt.show()
 
 ax = sns.kdeplot(
@@ -53,7 +53,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1.04, 1), frameon=False)
 ax.set_ylabel("Comment Density")
 ax.set_xlabel("Time of Day (hours)")
 plt.tight_layout()
-plt.savefig("./plots/submission_density_per_time.png", dpi=600)
+plt.savefig("./huggingface_plots/submission_density_per_time.png", dpi=600)
 plt.show()
 
 gb = df.groupby("subreddit").slabel.value_counts(normalize=True).rename("percent").reset_index()
@@ -68,7 +68,7 @@ fgrid = sns.catplot(
 )
 fgrid.axes[0, 0].set_ylabel("Percent of Total")
 fgrid.axes[0, 0].set_xlabel("")
-plt.savefig("./plots/sentiment_percent_per_sub.png", dpi=600)
+plt.savefig("./huggingface_plots/sentiment_percent_per_sub.png", dpi=600)
 plt.show()
 
 gb = df.groupby(["timeofday", "subreddit"]).comment_sentiment.mean().rename("avS").reset_index()
@@ -77,7 +77,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1.04, 1), frameon=False)
 ax.set_ylabel("Average Sentiment")
 ax.set_xlabel("Time of Day (hours)")
 plt.tight_layout()
-plt.savefig("./plots/average_sentiment_per_time.png", dpi=600)
+plt.savefig("./huggingface_plots/average_sentiment_per_time.png", dpi=600)
 plt.show()
 
 ax = sns.kdeplot(
@@ -87,7 +87,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1.04, 1), frameon=False)
 ax.set_ylabel("Comment Density")
 ax.set_xlabel("Hours After Post Submission")
 plt.tight_layout()
-plt.savefig("./plots/comment_density_v_time_after_submission.png", dpi=600)
+plt.savefig("./huggingface_plots/comment_density_v_time_after_submission.png", dpi=600)
 plt.show()
 
 gb = df.groupby(["hrafter", "subreddit"]).comment_sentiment.mean().rename("avS").reset_index()
@@ -96,5 +96,5 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1.04, 1), frameon=False)
 ax.set_ylabel("Average Sentiment")
 ax.set_xlabel("Hours After Post Submission")
 plt.tight_layout()
-plt.savefig("./plots/average_sentiment_per_hr_after.png", dpi=600)
+plt.savefig("./huggingface_plots/average_sentiment_per_hr_after.png", dpi=600)
 plt.show()

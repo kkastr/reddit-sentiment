@@ -5,6 +5,9 @@ emojis/
 thumb_plot.py
 api_keys.py
 *.csv
+bert_sentiment.py
+label_data_kmeans.py
+playground.ipynb
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

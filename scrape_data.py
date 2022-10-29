@@ -1,88 +1,100 @@
 import praw
 import pandas as pd
 import subprocess as sp
-
+from tqdm import tqdm
 from api_keys import client_id, client_secret, user_agent, username
 from params import num_posts, listOfSubreddits
 
 
-def getPosts(subreddit, num_posts: int, output: str):
-
-    post_columns = ['title', 'score', 'upvote_ratio', 'id', 'subreddit', 'url', 'num_comments',
-                    'is_reddit_media_domain', 'total_awards_received', 'created']
-
-    posts_df = pd.DataFrame(columns=post_columns)
-
+def getSubmissionIDs(subreddit, num_posts):
+    idlist = []
     for post in subreddit.hot(limit=num_posts):
-
         if post.stickied:
             continue
 
-        post_data = [post.title, post.score, post.upvote_ratio, post.id, post.subreddit,
-                     post.url, post.num_comments, post.is_reddit_media_domain,
-                     post.total_awards_received, post.created]
-
-        posts_df.loc[len(posts_df), post_columns] = post_data
-
-    posts_df.to_csv(output, index=False)
-
-    return posts_df
+        idlist.append(post.id)
+    return idlist
 
 
-def getComments(reddit, id_list, output):
-    comment_columns = ['body', 'score', 'post_id', 'total_awards_received', 'created']
+def getData(reddit, subreddit):
 
-    flist = []
+    cols = [
+        "comment_text",
+        "comment_score",
+        "comment_awards",
+        "comment_time",
+        "post_title",
+        "post_score",
+        "post_upvote_ratio",
+        "post_id",
+        "subreddit",
+        "post_url",
+        "post_awards",
+        "post_time",
+    ]
 
-    for post_id in id_list:
+    post_ids = getSubmissionIDs(subreddit=subreddit, num_posts=num_posts)
 
-        submission = reddit.submission(id=post_id)
-        # submission.comments.replace_more(limit=None)
+    rows = []
+    for pid in post_ids:
+
+        submission = reddit.submission(id=pid)
+
+        # submission.comments.replace_more(limit=0)
         # removes the "more comments" button that hides some of the comments in a thread.
-
-        submission.comments.replace_more(limit=None)
-
+        # limit=None means remove all instances of "more comments"
+        submission.comments.replace_more(limit=10)
         # submission.comments.list()
         # method does a breadth first traversal of a tree and yields all comments + replies.
-
-        comments_df = pd.DataFrame(columns=comment_columns)
-
-        for comment in submission.comments.list():
+        for comment in tqdm(submission.comments.list()):
 
             if comment.stickied:
                 continue
 
-            comment_data = [comment.body, comment.score, post_id, comment.total_awards_received,
-                            comment.created]
+            data = [
+                comment.body,
+                comment.score,
+                comment.total_awards_received,
+                comment.created,
+                submission.title,
+                submission.score,
+                submission.upvote_ratio,
+                submission.id,
+                subreddit.display_name,
+                submission.url,
+                submission.total_awards_received,
+                submission.created,
+            ]
 
-            comments_df.loc[len(comments_df), comment_columns] = comment_data
+            rows.append(data)
 
-        flist.append(comments_df)
+    df = pd.DataFrame(data=rows, columns=cols)
 
-    pd.concat(flist, ignore_index=True).to_csv(output, index=False)
+    return df
 
 
 def main():
 
-    reddit = praw.Reddit(client_id=client_id, client_secret=client_secret,
-                         user_agent=user_agent, username=username)
+    reddit = praw.Reddit(
+        client_id=client_id, client_secret=client_secret, user_agent=user_agent, username=username
+    )
 
-    dir_name = './data'
+    dir_name = "./data"
 
-    full_cmd = f'mkdir -p {dir_name}'
+    full_cmd = f"mkdir -p {dir_name}"
 
     sp.run(full_cmd.split())
 
     for subredditName in listOfSubreddits:
-
+        print(f"Scraping r/{subredditName}...")
         subreddit = reddit.subreddit(subredditName)
 
-        posts_outfile = f'{dir_name}/{subredditName}_posts.csv'
-        comments_outfile = f'{dir_name}/{subredditName}_comments.csv'
+        outfile = f"{dir_name}/{subredditName}.csv"
+        df = getData(reddit=reddit, subreddit=subreddit)
 
-        df = getPosts(subreddit=subreddit, num_posts=num_posts, output=posts_outfile)
+        df.to_csv(outfile, index=False)
 
-        getComments(reddit=reddit, id_list=df.id.values, output=comments_outfile)
+        print(f"Finished with r/{subredditName}.")
 
 
 if __name__ == "__main__":

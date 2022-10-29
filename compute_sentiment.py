@@ -1,57 +1,49 @@
 import re
-import nltk
+import spacy
+import string
 import numpy as np
 import pandas as pd
-import nltk.sentiment.vader as sev
-
-
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import confusion_matrix, classification_report, roc_curve
+from sklearn.svm import LinearSVC
+from vutils.general import print_progress
 from params import listOfSubreddits
-
-# pre-trained sentiment analysis
-# nltk.download('vader_lexicon', download_dir='./')
 
 
 def main():
-    sia_cols = ['comment_sentiment', 'title_sentiment', 'comment_score', 'post_score',
-                'post_upvote_ratio', 'post_id', 'subreddit', 'post_time', 'comment_time']
 
-    sia = sev.SentimentIntensityAnalyzer()
+    df = pd.read_csv("./data/combined_labeled_data.csv")
 
-    df_list = []
+    print(df.groupby("comment_labels").count().comment_text)
+    df['comment_labels'] = LabelEncoder().fit_transform(df['comment_labels'])
+    x = df["comment_tokens"]
+    y = df["comment_labels"]
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
-    for subredditName in listOfSubreddits:
+    hyperparams = dict(
+        penalty="l1", loss="squared_hinge", dual=False, tol=1e-4, max_iter=1000
+    )
 
-        pf = pd.read_csv(f'./data/{subredditName}_posts.csv')
+    vectorizer = TfidfVectorizer()
+    classifier = LinearSVC(**hyperparams)
 
-        cf = pd.read_csv(f'./data/{subredditName}_comments.csv')
+    steps = [("vectorizer", vectorizer), ("classifier", classifier)]
 
-        gb = cf.groupby('post_id')
+    pipeln = Pipeline(steps)
 
-        for key, grp in gb:
-            tdf = pd.DataFrame(columns=sia_cols)
+    pipeln.fit(x_train, y_train)
 
-            for item in grp.iterrows():
-                post = pf[pf.id == key]
+    y_pred = pipeln.predict(x_test)
 
-                idx = item[0]
-                comment = item[1]
-                title_sentiment = sia.polarity_scores(post.title.values[0])['compound']
-                sentiment_score = sia.polarity_scores(comment.body)['compound']
-
-                output_data = [sentiment_score, title_sentiment, comment.score,
-                               post.score.values[0], post.upvote_ratio.values[0],
-                               key, subredditName,
-                               post.created.values[0], comment.created]
-
-                tdf.loc[idx, sia_cols] = output_data
-            df_list.append(tdf)
-
-        print(f'Finished processing data from r/{subredditName}.')
-
-    cdf = pd.concat(df_list, ignore_index=True)
-
-    cdf.to_csv('sentiment_data.csv', index=False)
+    print(classification_report(y_test, y_pred))
+    print("\n\n")
+    print(confusion_matrix(y_test, y_pred))
 
 
 if __name__ == "__main__":
+    nlp = spacy.load("en_core_web_sm")
+
     main()

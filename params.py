@@ -1,2 +1,2 @@
 num_posts = 10
-listOfSubreddits = ['games', 'news', 'science', 'space', 'politics']
+listOfSubreddits = ['canada', 'worldnews', 'science', 'technology', 'politics']
