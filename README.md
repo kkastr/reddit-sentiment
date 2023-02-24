@@ -4,7 +4,7 @@ Sentiment analysis is the process of programmatically extracting sentiment from 
 
 In this work, we look at comments from various subreddits, label them with a sentiment value, and then train a classifier for conducting sentiment analysis.
 
-![dashboard](./plots/sentiment_dashboard.png)
+![dashboard](./plots/tableau_sentiment_dashboard.png)
 
 ![metrics](./plots/metrics_display.png)
 
